@@ -94,6 +94,11 @@ sed \
   -e "s|@ENV_FILE@|${ENV_FILE}|g" \
   "${REPO_DIR}/systemd/warp-webui.service" > "${UNIT_DST}"
 
+if command -v warp-cli >/dev/null 2>&1; then
+  warp-cli --accept-tos mode proxy 2>/dev/null || true
+  warp-cli --accept-tos proxy port "${WARP_PROXY_PORT}" 2>/dev/null || true
+fi
+
 systemctl daemon-reload
 systemctl enable "${SERVICE_NAME}.service"
 systemctl restart "${SERVICE_NAME}.service"
