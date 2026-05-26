@@ -1,0 +1,20 @@
+[Unit]
+Description=WARP Web UI Controller
+After=network-online.target warp-svc.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=@ENV_FILE@
+ExecStart=/usr/bin/python3 @INSTALL_DIR@/app.py
+Restart=always
+RestartSec=2
+User=root
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/run /var/log /etc/default/warp-webui /etc/warp-webui /var/backups/warp-webui
+
+[Install]
+WantedBy=multi-user.target
