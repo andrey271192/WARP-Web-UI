@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# WARP Web UI — one-command installer (run as root on Debian/Ubuntu)
+# WARP Web UI — установка одной командой (Debian/Ubuntu, от root)
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,11 +11,11 @@ ALIASES_DIR="/etc/warp-webui"
 LOG_DIR="/var/log/warp-webui"
 
 if [[ "${EUID:-0}" -ne 0 ]]; then
-  echo "Run as root: sudo bash install.sh"
+  echo "Запустите от root: sudo bash install.sh"
   exit 1
 fi
 
-echo "=== WARP Web UI installer ==="
+echo "=== Установка WARP Web UI ==="
 echo
 
 prompt() {
@@ -29,32 +29,32 @@ prompt() {
   fi
 }
 
-echo "SOCKS port: local port for warp-cli proxy mode (used by x-ui / Amnezia presets)."
-echo "Common choices: 40000 (warp-offline style) or 1024 (cloudflare-warp default)."
-prompt WARP_PROXY_PORT "SOCKS proxy port" "40000"
+echo "Порт SOCKS: локальный порт режима proxy у warp-cli (для пресетов x-ui / Amnezia)."
+echo "Частые значения: 40000 (как у warp-offline) или 1024 (по умолчанию у cloudflare-warp)."
+prompt WARP_PROXY_PORT "Порт SOCKS-прокси" "40000"
 if ! [[ "${WARP_PROXY_PORT}" =~ ^[0-9]+$ ]] || (( WARP_PROXY_PORT < 1 || WARP_PROXY_PORT > 65535 )); then
-  echo "Invalid SOCKS port: ${WARP_PROXY_PORT}"
+  echo "Некорректный порт SOCKS: ${WARP_PROXY_PORT}"
   exit 1
 fi
 
-prompt WARP_WEBUI_PORT "Web UI HTTP port" "3030"
+prompt WARP_WEBUI_PORT "HTTP-порт веб-панели" "3030"
 if ! [[ "${WARP_WEBUI_PORT}" =~ ^[0-9]+$ ]] || (( WARP_WEBUI_PORT < 1 || WARP_WEBUI_PORT > 65535 )); then
-  echo "Invalid Web UI port: ${WARP_WEBUI_PORT}"
+  echo "Некорректный порт веб-панели: ${WARP_WEBUI_PORT}"
   exit 1
 fi
 
-prompt WARP_WEBUI_USER "Web UI admin username" "warpadmin"
+prompt WARP_WEBUI_USER "Логин администратора веб-панели" "warpadmin"
 
 while true; do
-  read -rsp "Web UI admin password (min 8 chars): " WARP_WEBUI_PASS
+  read -rsp "Пароль администратора (минимум 8 символов): " WARP_WEBUI_PASS
   echo
   if [[ "${#WARP_WEBUI_PASS}" -ge 8 ]]; then
     break
   fi
-  echo "Password too short. Use at least 8 characters."
+  echo "Пароль слишком короткий. Нужно не менее 8 символов."
 done
 
-# Detect public host for client preset hints (optional)
+# Публичный адрес для подсказок в пресетах клиентов (необязательно)
 WARP_PUBLIC_HOST="${WARP_PUBLIC_HOST:-}"
 if [[ -z "${WARP_PUBLIC_HOST}" ]]; then
   WARP_PUBLIC_HOST="$(curl -fsS --max-time 3 https://api.ipify.org 2>/dev/null || true)"
@@ -64,7 +64,7 @@ if [[ -z "${WARP_PUBLIC_HOST}" ]]; then
 fi
 
 echo
-echo "Installing to ${INSTALL_DIR} ..."
+echo "Установка в ${INSTALL_DIR} ..."
 mkdir -p "${INSTALL_DIR}/scripts" "${ALIASES_DIR}" "${LOG_DIR}"
 install -m 0755 "${REPO_DIR}/app.py" "${INSTALL_DIR}/app.py"
 install -m 0755 "${REPO_DIR}/scripts/warp-install-cf.sh" "${INSTALL_DIR}/scripts/warp-install-cf.sh"
@@ -103,17 +103,17 @@ systemctl daemon-reload
 systemctl enable "${SERVICE_NAME}.service"
 systemctl restart "${SERVICE_NAME}.service"
 
-# Optional: open firewall for Web UI port
+# По желанию: правило firewall для порта панели
 if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -qi active; then
   ufw allow "${WARP_WEBUI_PORT}/tcp" comment 'warp-webui' || true
 fi
 
 echo
-echo "=== Installed ==="
-echo "Web UI:  http://${WARP_PUBLIC_HOST}:${WARP_WEBUI_PORT}/"
-echo "Login:   ${WARP_WEBUI_USER} / (password you entered)"
-echo "SOCKS:   127.0.0.1:${WARP_PROXY_PORT} (after WARP is installed and proxy mode enabled)"
-echo "Env:     ${ENV_FILE}"
+echo "=== Установка завершена ==="
+echo "Веб-панель:  http://${WARP_PUBLIC_HOST}:${WARP_WEBUI_PORT}/"
+echo "Вход:        ${WARP_WEBUI_USER} / (пароль, который вы ввели)"
+echo "SOCKS:       127.0.0.1:${WARP_PROXY_PORT} (после установки WARP и включения режима proxy)"
+echo "Конфиг:      ${ENV_FILE}"
 echo
-echo "Next: open the Web UI and use 'Install WARP' if cloudflare-warp is not installed yet."
-echo "Set proxy port in the UI or re-run install with a different WARP_PROXY_PORT in ${ENV_FILE}."
+echo "Далее: откройте веб-панель и нажмите «Install WARP», если пакет cloudflare-warp ещё не установлен."
+echo "Порт proxy можно сменить в UI или в ${ENV_FILE} (переменная WARP_PROXY_PORT) и перезапустить сервис."

@@ -1,42 +1,44 @@
 # WARP Web UI
 
-Browser-based control panel for **Cloudflare WARP** on Linux: connect/disconnect, WARP+ license, SOCKS proxy port, and optional presets for **3x-ui** and **Amnezia Xray**.
+Веб-панель для управления **Cloudflare WARP** на Linux: подключение и отключение туннеля, активация WARP+, настройка SOCKS-прокси и готовые пресеты для **3x-ui** и **Amnezia Xray**.
 
-## Features
+Документация на английском (кратко): [README.en.md](README.en.md).
 
-- **WARP control**: Connect, disconnect, restart `warp-svc`, view status and logs
-- **Account**: Registration info, apply WARP+ license key
-- **Install / uninstall** `cloudflare-warp` from the UI (Debian/Ubuntu apt repo)
-- **SOCKS proxy**: Set `warp-cli` proxy port (e.g. `40000` or `1024`)
-- **3x-ui preset**: Add `warp-socks` outbound → `127.0.0.1:PORT` and `geosite:google` routing rule
-- **Amnezia preset**: Docker bridge `172.17.0.1:11025` → host SOCKS, per-client WARP routing with friendly names
+## Возможности
 
-## Requirements
+- **Управление WARP**: подключение, отключение, перезапуск `warp-svc`, просмотр статуса и логов
+- **Аккаунт**: информация о регистрации, применение лицензионного ключа WARP+
+- **Установка и удаление** пакета `cloudflare-warp` прямо из браузера (репозиторий Cloudflare для Debian/Ubuntu)
+- **SOCKS-прокси**: смена порта `warp-cli proxy` (часто `40000` или `1024`)
+- **Пресет 3x-ui**: outbound `warp-socks` → `127.0.0.1:ПОРТ` и правило маршрутизации `geosite:google`
+- **Пресет Amnezia**: мост Docker `172.17.0.1:11025` → SOCKS на хосте, маршрутизация WARP для выбранных клиентов с понятными именами
 
-- Linux (Debian/Ubuntu recommended)
-- `python3` (stdlib only — no pip packages)
+## Требования
+
+- Linux (рекомендуется Debian/Ubuntu)
+- `python3` — только стандартная библиотека, без pip
 - `systemd`
-- Optional: `cloudflare-warp` package (can be installed via UI or `scripts/warp-install-cf.sh`)
-- Optional: `docker`, `socat`, `x-ui` / Amnezia for integration presets
+- По желанию: пакет `cloudflare-warp` (можно поставить из UI или скриптом `scripts/warp-install-cf.sh`)
+- Для интеграций: `docker`, `socat`, панель **3x-ui** и/или **Amnezia**
 
-## Quick start
+## Быстрый старт
 
-### One-line install
+### Установка одной командой
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/andrey271192/WARP-Web-UI/main/install.sh | sudo bash
 ```
 
-The installer **asks interactively**:
+Установщик **задаёт вопросы** (можно нажать Enter для значения по умолчанию):
 
-| Prompt | Default | Notes |
-|--------|---------|--------|
-| SOCKS proxy port | `40000` | Also `1024` is common for official `cloudflare-warp` |
-| Web UI port | `3030` | Open in firewall if needed |
-| Admin username | `warpadmin` | HTTP Basic Auth |
-| Admin password | *(required, min 8 chars)* | Stored in `/etc/default/warp-webui` (`chmod 600`) |
+| Вопрос | По умолчанию | Зачем это нужно |
+|--------|--------------|-----------------|
+| Порт SOCKS-прокси | `40000` | Локальный порт `warp-cli` в режиме proxy; для официального `cloudflare-warp` часто берут `1024` |
+| Порт веб-панели | `3030` | HTTP-порт панели; при необходимости откройте его в firewall |
+| Логин администратора | `warpadmin` | HTTP Basic Auth |
+| Пароль администратора | *(обязательно, не короче 8 символов)* | Сохраняется в `/etc/default/warp-webui` с правами `chmod 600` |
 
-### Clone and install
+### Установка из клона репозитория
 
 ```bash
 git clone https://github.com/andrey271192/WARP-Web-UI.git
@@ -44,65 +46,77 @@ cd WARP-Web-UI
 sudo bash install.sh
 ```
 
-Open `http://YOUR_SERVER:3030/` (use the port you chose). Log in with the credentials you set.
+Откройте в браузере `http://АДРЕС_СЕРВЕРА:3030/` (подставьте выбранный порт). Войдите с логином и паролем, которые указали при установке.
 
-If WARP is not installed yet, click **Install WARP** in the UI (or run `scripts/warp-install-cf.sh` with `WARP_PROXY_PORT` set).
+Если WARP ещё не установлен — нажмите **Install WARP** в интерфейсе (или выполните `scripts/warp-install-cf.sh`, задав `WARP_PROXY_PORT`).
 
-### Uninstall
+### Удаление
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/andrey271192/WARP-Web-UI/main/uninstall.sh | sudo bash
 ```
 
-Or from a clone: `sudo bash uninstall.sh` — stops the service, optionally removes files, config, and the `cloudflare-warp` package.
+Или из каталога клона: `sudo bash uninstall.sh` — останавливает сервис, по запросу удаляет файлы приложения, конфигурацию и при желании пакет `cloudflare-warp`.
 
-## Repository layout
+## Структура репозитория
 
 ```
-app.py                          # Web UI + API (Python http.server)
-scripts/warp-install-cf.sh      # Install cloudflare-warp from Cloudflare apt repo
-scripts/warp-uninstall-cf.sh    # Remove cloudflare-warp package
-systemd/warp-webui.service      # systemd unit template
-install.sh / uninstall.sh       # One-command setup / teardown
-.env.example                    # Environment variable reference
+app.py                          # Веб-интерфейс и API (Python http.server)
+scripts/warp-install-cf.sh      # Установка cloudflare-warp из apt Cloudflare
+scripts/warp-uninstall-cf.sh    # Удаление пакета cloudflare-warp
+systemd/warp-webui.service      # Шаблон unit для systemd
+install.sh / uninstall.sh       # Установка и снятие «в одну команду»
+.env.example                    # Справочник переменных окружения
 ```
 
-After install, files live under `/opt/warp-webui/`, config in `/etc/default/warp-webui`.
+После установки файлы лежат в `/opt/warp-webui/`, настройки — в `/etc/default/warp-webui`.
 
-## Configuration
+## Настройка
 
-See [`.env.example`](.env.example). Main variables:
+Подробности — в [`.env.example`](.env.example). Основные переменные:
 
-- `WARP_WEBUI_USER`, `WARP_WEBUI_PASS` — Basic Auth
-- `WARP_WEBUI_PORT` — HTTP port (default `3030`)
-- `WARP_PROXY_PORT` — SOCKS port used at install and for `warp-install` from UI
-- `WARP_PUBLIC_HOST` — Public IP/hostname for client preset hints
+- `WARP_WEBUI_USER`, `WARP_WEBUI_PASS` — Basic Auth для панели
+- `WARP_WEBUI_PORT` — HTTP-порт (по умолчанию `3030`)
+- `WARP_PROXY_PORT` — порт SOCKS при установке и при установке WARP из UI
+- `WARP_PUBLIC_HOST` — публичный IP или hostname для подсказок в пресетах клиентов
 
-Client display names for Amnezia: `/etc/warp-webui/client-aliases.json`
+Понятные имена клиентов Amnezia: `/etc/warp-webui/client-aliases.json`.
 
-## Security notes
+## Интеграция с 3x-ui (по желанию)
 
-- **HTTP Basic Auth only** — credentials are sent on every request. Prefer **HTTPS** (reverse proxy: nginx/Caddy + TLS) for production.
-- **Firewall**: Expose only the Web UI port to trusted IPs (`ufw allow from TRUSTED to any port 3030`).
-- **Root service**: The panel runs as root to manage `warp-cli`, systemd, and Docker. Do not expose it to the public internet without protection.
-- **Secrets**: Never commit `/etc/default/warp-webui`. Rotate the admin password after install.
-- WARP+ license keys are entered in the UI and passed to `warp-cli` — they are not stored in this repo.
+1. Установите и подключите WARP, включите режим proxy и задайте порт SOCKS (в панели или при `install.sh`).
+2. В веб-панели используйте действие пресета **3x-ui** — будет предложен outbound на `127.0.0.1:ПОРТ` и правило для `geosite:google`.
+3. Убедитесь, что конфиг x-ui указывает на тот же порт, что и `WARP_PROXY_PORT`.
 
-## API (authenticated)
+Требуется установленная панель x-ui и доступ к её `config.json` (путь можно переопределить в `.env`).
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/` | HTML UI |
-| GET | `/status`, `/registration`, `/proxy`, `/logs` | Status |
-| POST | `/connect`, `/disconnect`, `/restart` | WARP control |
-| POST | `/warp-install`, `/warp-uninstall` | Package install/remove |
-| POST | `/proxy-port`, `/license` | SOCKS port, WARP+ key |
-| POST | `/xui-preset`, `/amnezia-preset`, `/amnezia-routing` | Integration presets |
+## Интеграция с Amnezia (по желанию)
 
-## License
+1. На хосте с Docker поднимите SOCKS WARP и при необходимости мост `socat` (панель может создать unit `warp-socks-bridge`).
+2. В панели примените пресет **Amnezia** — маршрутизация через `172.17.0.1:11025` к SOCKS на хосте.
+3. Назначайте WARP только нужным клиентам; имена удобно править в `client-aliases.json`.
 
-MIT — see [LICENSE](LICENSE).
+Нужны `docker`, контейнер Amnezia Xray и переменные `AMNEZIA_*` при нестандартных путях — см. `.env.example`.
 
-## Russian documentation
+## Безопасность
 
-See [README.ru.md](README.ru.md).
+- **Только HTTP Basic Auth** — учётные данные передаются с каждым запросом. В продакшене ставьте **HTTPS** (обратный прокси: nginx, Caddy + TLS).
+- **Firewall**: открывайте порт панели только для доверенных IP, например: `ufw allow from ДОВЕРЕННЫЙ_IP to any port 3030`.
+- **Права root**: панель работает от root, чтобы управлять `warp-cli`, systemd и Docker. Не выставляйте её в открытый интернет без защиты.
+- **Секреты**: не коммитьте `/etc/default/warp-webui` в git. После установки смените пароль администратора.
+- Ключи WARP+ вводятся в UI и передаются в `warp-cli`; в репозитории они не хранятся.
+
+## API (требуется авторизация)
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| GET | `/` | HTML-интерфейс |
+| GET | `/status`, `/registration`, `/proxy`, `/logs` | Статус и диагностика |
+| POST | `/connect`, `/disconnect`, `/restart` | Управление WARP |
+| POST | `/warp-install`, `/warp-uninstall` | Установка/удаление пакета |
+| POST | `/proxy-port`, `/license` | Порт SOCKS, ключ WARP+ |
+| POST | `/xui-preset`, `/amnezia-preset`, `/amnezia-routing` | Пресеты интеграций |
+
+## Лицензия
+
+MIT — см. [LICENSE](LICENSE).
